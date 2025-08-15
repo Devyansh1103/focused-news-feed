@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Bell, Settings, Menu } from "lucide-react";
+import { Search, Bell, Settings, Menu, Sun, Moon } from "lucide-react";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -10,7 +10,24 @@ interface HeaderProps {
 }
 
 export function Header({ onSearch, onMenuClick }: HeaderProps) {
+  const [isDark, setIsDark] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+    
+    setIsDark(shouldBeDark);
+    document.documentElement.classList.toggle('dark', shouldBeDark);
+  }, []);
+
+  const toggleTheme = () => {
+    const newIsDark = !isDark;
+    setIsDark(newIsDark);
+    document.documentElement.classList.toggle('dark', newIsDark);
+    localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +88,19 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
 
           {/* User Actions */}
           <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={toggleTheme}
+              className="p-2 hover:bg-muted transition-colors"
+            >
+              {isDark ? (
+                <Sun className="h-5 w-5 text-accent transition-transform hover:rotate-12" />
+              ) : (
+                <Moon className="h-5 w-5 text-primary transition-transform hover:-rotate-12" />
+              )}
+            </Button>
+            
             <Button variant="ghost" size="sm" className="relative p-2">
               <Bell className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 h-3 w-3 bg-accent rounded-full border-2 border-background"></span>
