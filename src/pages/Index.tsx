@@ -3,40 +3,27 @@ import { Header } from "@/components/ui/header";
 import { HeroSection } from "@/components/ui/hero-section";
 import { CategoryFilter } from "@/components/ui/category-filter";
 import { NewsCard } from "@/components/ui/news-card";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { featuredArticle, newsArticles, categories } from "@/data/sampleNews";
+import { useNews } from "@/hooks/useNews";
+import { useBookmarks } from "@/hooks/useBookmarks";
+import { useRatings } from "@/hooks/useRatings";
+import { useAuth } from "@/hooks/useAuth";
+import { featuredArticle, categories } from "@/data/sampleNews";
 import heroImage from "@/assets/hero-news.jpg";
+import { RefreshCw } from "lucide-react";
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("All");
-  const [bookmarkedArticles, setBookmarkedArticles] = useState<Set<string>>(
-    new Set(newsArticles.filter(article => article.isBookmarked).map(article => article.id))
-  );
-  const [articleRatings, setArticleRatings] = useState<Record<string, number>>(
-    Object.fromEntries(newsArticles.map(article => [article.id, article.rating || 0]))
-  );
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { articles, loading, fetchNewsFromAPI } = useNews(activeCategory);
+  const { bookmarkedArticles, toggleBookmark } = useBookmarks();
+  const { articleRatings, rateArticle } = useRatings();
 
-  const filteredArticles = activeCategory === "All" 
-    ? newsArticles 
-    : newsArticles.filter(article => article.category === activeCategory);
 
   const handleBookmark = (articleId: string) => {
-    const newBookmarked = new Set(bookmarkedArticles);
-    if (newBookmarked.has(articleId)) {
-      newBookmarked.delete(articleId);
-      toast({
-        title: "Bookmark removed",
-        description: "Article removed from your bookmarks",
-      });
-    } else {
-      newBookmarked.add(articleId);
-      toast({
-        title: "Article bookmarked",
-        description: "Added to your reading list",
-      });
-    }
-    setBookmarkedArticles(newBookmarked);
+    toggleBookmark(articleId);
   };
 
   const handleShare = (title: string) => {
@@ -56,11 +43,7 @@ const Index = () => {
   };
 
   const handleRate = (articleId: string, rating: number) => {
-    setArticleRatings(prev => ({ ...prev, [articleId]: rating }));
-    toast({
-      title: "Rating saved",
-      description: `You rated this article ${rating} star${rating !== 1 ? 's' : ''}`,
-    });
+    rateArticle(articleId, rating);
   };
 
   const handleSearch = (query: string) => {
@@ -68,6 +51,10 @@ const Index = () => {
       title: "Search functionality",
       description: `Searching for: "${query}"`,
     });
+  };
+
+  const handleFetchNews = async () => {
+    await fetchNewsFromAPI(activeCategory === "All" ? "general" : activeCategory.toLowerCase());
   };
 
   return (
@@ -97,6 +84,14 @@ const Index = () => {
               <h2 className="text-3xl font-bold text-foreground mb-2">Latest News</h2>
               <p className="text-muted-foreground">Stay updated with the latest stories from around the world</p>
             </div>
+            <Button 
+              onClick={handleFetchNews}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Fetch Latest News
+            </Button>
           </div>
           
           <CategoryFilter
@@ -108,35 +103,52 @@ const Index = () => {
 
         {/* News Grid */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredArticles.map((article) => (
-            <NewsCard
-              key={article.id}
-              title={article.title}
-              summary={article.summary}
-              category={article.category}
-              readTime={article.readTime}
-              imageUrl={article.imageUrl}
-              isBookmarked={bookmarkedArticles.has(article.id)}
-              rating={articleRatings[article.id] || 0}
-              onBookmark={() => handleBookmark(article.id)}
-              onShare={() => handleShare(article.title)}
-              onRate={(rating) => handleRate(article.id, rating)}
-            />
-          ))}
+          {loading ? (
+            // Loading skeletons
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-card rounded-lg p-4 animate-pulse">
+                <div className="h-48 bg-muted rounded-md mb-4"></div>
+                <div className="h-4 bg-muted rounded mb-2"></div>
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+              </div>
+            ))
+          ) : articles.length > 0 ? (
+            articles.map((article) => (
+              <NewsCard
+                key={article.id}
+                title={article.title}
+                summary={article.summary || ''}
+                category={article.category}
+                readTime={String(article.read_time || 5)}
+                imageUrl={article.image_url || ''}
+                isBookmarked={bookmarkedArticles.has(article.id)}
+                rating={articleRatings[article.id] || 0}
+                onBookmark={() => handleBookmark(article.id)}
+                onShare={() => handleShare(article.title)}
+                onRate={(rating) => handleRate(article.id, rating)}
+              />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground mb-4">No articles found for this category.</p>
+              <Button onClick={handleFetchNews} variant="outline">
+                Fetch News
+              </Button>
+            </div>
+          )}
         </section>
 
         {/* Load More */}
-        <div className="text-center pt-8">
-          <button
-            onClick={() => toast({
-              title: "Loading more articles",
-              description: "Fetching the latest news for you",
-            })}
-            className="bg-gradient-primary text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-          >
-            Load More Articles
-          </button>
-        </div>
+        {!loading && articles.length > 0 && (
+          <div className="text-center pt-8">
+            <Button
+              onClick={handleFetchNews}
+              className="bg-gradient-primary text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            >
+              Load More Articles
+            </Button>
+          </div>
+        )}
       </main>
 
       {/* Footer */}

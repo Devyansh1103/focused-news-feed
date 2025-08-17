@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Bell, Settings, Menu, Sun, Moon } from "lucide-react";
+import { Search, Bell, Settings, Menu, Sun, Moon, LogOut } from "lucide-react";
+import { AuthModal } from "@/components/auth/AuthModal";
+import { useAuth } from "@/hooks/useAuth";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -12,6 +14,7 @@ interface HeaderProps {
 export function Header({ onSearch, onMenuClick }: HeaderProps) {
   const [isDark, setIsDark] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -128,12 +131,30 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
               <Settings className="h-5 w-5" />
             </Button>
             
-            <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all">
-              <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
-              <AvatarFallback className="bg-gradient-primary text-white text-sm font-medium">
-                JD
-              </AvatarFallback>
-            </Avatar>
+            {user ? (
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={signOut}
+                  className="p-2 text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+                <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all">
+                  <AvatarImage src={user?.user_metadata?.avatar_url} alt="User" />
+                  <AvatarFallback className="bg-gradient-primary text-white text-sm font-medium">
+                    {user.email?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            ) : (
+              <AuthModal>
+                <Button variant="default" size="sm">
+                  Sign In
+                </Button>
+              </AuthModal>
+            )}
           </div>
         </div>
       </div>
