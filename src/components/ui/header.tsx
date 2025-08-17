@@ -101,12 +101,30 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
               )}
             </Button>
             
-            <Button variant="ghost" size="sm" className="relative p-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="relative p-2"
+              onClick={() => {
+                // Handle notifications
+                console.log("Notifications clicked");
+                // You can add notification panel logic here
+              }}
+            >
               <Bell className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 h-3 w-3 bg-accent rounded-full border-2 border-background"></span>
             </Button>
             
-            <Button variant="ghost" size="sm" className="p-2 hidden sm:flex">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="p-2 hidden sm:flex"
+              onClick={() => {
+                // Handle settings
+                console.log("Settings clicked");
+                // You can add settings panel logic here
+              }}
+            >
               <Settings className="h-5 w-5" />
             </Button>
             
