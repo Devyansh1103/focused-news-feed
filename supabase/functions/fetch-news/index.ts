@@ -1,91 +1,126 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    )
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get NEWS_API_KEY from Supabase secrets
-    const newsApiKey = Deno.env.get('NEWS_API_KEY')
+    // Get NewsAPI key
+    const newsApiKey = Deno.env.get('NEWS_API_KEY');
     if (!newsApiKey) {
-      throw new Error('NEWS_API_KEY not found in environment variables')
+      console.error('NEWS_API_KEY not found in environment variables');
+      return new Response(JSON.stringify({ error: 'API key not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    const { category = 'general' } = await req.json()
+    // Parse request body
+    const { category = 'general' } = await req.json().catch(() => ({}));
+    
+    console.log(`Fetching news for category: ${category}`);
 
     // Fetch news from NewsAPI
     const newsResponse = await fetch(
-      `https://newsapi.org/v2/top-headlines?category=${category}&country=us&pageSize=20&apiKey=${newsApiKey}`
-    )
+      `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${newsApiKey}&pageSize=20`
+    );
 
     if (!newsResponse.ok) {
-      throw new Error('Failed to fetch news from NewsAPI')
+      const errorText = await newsResponse.text();
+      console.error('NewsAPI error:', errorText);
+      return new Response(JSON.stringify({ error: 'Failed to fetch news' }), {
+        status: newsResponse.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    const newsData = await newsResponse.json()
+    const newsData = await newsResponse.json();
+    console.log(`Fetched ${newsData.articles?.length || 0} articles from NewsAPI`);
 
-    // Process and save articles to database
-    const articlesToInsert = newsData.articles
-      .filter((article: any) => article.title && article.description)
+    // Process and filter articles
+    const articles = newsData.articles
+      ?.filter((article: any) => 
+        article.title && 
+        article.description && 
+        !article.title.includes('[Removed]') &&
+        !article.description.includes('[Removed]')
+      )
       .map((article: any) => ({
         title: article.title,
         summary: article.description,
-        content: article.content || article.description,
+        content: article.content,
         category: category,
-        source: article.source?.name || 'Unknown',
+        source: article.source?.name,
         author: article.author,
         url: article.url,
         image_url: article.urlToImage,
         published_at: article.publishedAt,
-        read_time: Math.max(1, Math.floor(article.content?.length / 200) || 3)
-      }))
+        read_time: Math.ceil((article.content?.length || 0) / 200), // Rough estimate: 200 words per minute
+      })) || [];
 
-    // Insert articles into database (ignore duplicates)
-    const { data: insertedArticles, error } = await supabase
+    console.log(`Processing ${articles.length} valid articles`);
+
+    if (articles.length === 0) {
+      return new Response(JSON.stringify({ 
+        message: 'No articles to process',
+        processed: 0,
+        inserted: 0 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Insert articles into database (upsert to handle duplicates)
+    const { data, error } = await supabase
       .from('articles')
-      .upsert(articlesToInsert, { 
+      .upsert(articles, { 
         onConflict: 'url',
         ignoreDuplicates: true 
       })
-      .select()
+      .select();
 
     if (error) {
-      console.error('Database error:', error)
-      throw error
+      console.error('Database error:', error);
+      return new Response(JSON.stringify({ error: 'Database error', details: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        articlesProcessed: articlesToInsert.length,
-        articlesInserted: insertedArticles?.length || 0
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    )
+    const insertedCount = data?.length || 0;
+    console.log(`Successfully inserted ${insertedCount} articles`);
+
+    return new Response(JSON.stringify({
+      message: 'News fetched and stored successfully',
+      processed: articles.length,
+      inserted: insertedCount,
+      category: category
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
-    console.error('Error:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      },
-    )
+    console.error('Unexpected error:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
-})
+});

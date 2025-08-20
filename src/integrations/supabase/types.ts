@@ -14,7 +14,177 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      articles: {
+        Row: {
+          author: string | null
+          category: string
+          content: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          published_at: string | null
+          read_time: number | null
+          source: string | null
+          summary: string | null
+          title: string
+          url: string | null
+        }
+        Insert: {
+          author?: string | null
+          category: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          published_at?: string | null
+          read_time?: number | null
+          source?: string | null
+          summary?: string | null
+          title: string
+          url?: string | null
+        }
+        Update: {
+          author?: string | null
+          category?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          published_at?: string | null
+          read_time?: number | null
+          source?: string | null
+          summary?: string | null
+          title?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      bookmarks: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          preferences: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          preferences?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          preferences?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ratings: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reading_history: {
+        Row: {
+          article_id: string
+          id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          id?: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_history_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
