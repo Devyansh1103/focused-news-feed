@@ -65,7 +65,7 @@ export const useNews = (category: string = 'All') => {
 
       toast({
         title: "News updated",
-        description: `Fetched ${data.articlesProcessed} new articles`,
+        description: `Fetched ${data.processed} new articles`,
       })
 
       // Refresh the articles list
