@@ -5,16 +5,20 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Search, Bell, Settings, Menu, Sun, Moon, LogOut } from "lucide-react";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
   onMenuClick?: () => void;
+  activeCategory?: string;
+  onCategoryChange?: (category: string) => void;
 }
 
-export function Header({ onSearch, onMenuClick }: HeaderProps) {
+export function Header({ onSearch, onMenuClick, activeCategory, onCategoryChange }: HeaderProps) {
   const [isDark, setIsDark] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { user, signOut } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -63,13 +67,42 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
             </div>
             
             <nav className="hidden md:flex items-center gap-1">
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+              <Button 
+                variant="ghost" 
+                className={`text-muted-foreground hover:text-foreground ${activeCategory === "All" ? "text-foreground bg-muted" : ""}`}
+                onClick={() => {
+                  onCategoryChange?.("All");
+                  toast({
+                    title: "Category changed",
+                    description: "Showing all news articles",
+                  });
+                }}
+              >
                 Home
               </Button>
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+              <Button 
+                variant="ghost" 
+                className={`text-muted-foreground hover:text-foreground ${activeCategory === "Technology" ? "text-foreground bg-muted" : ""}`}
+                onClick={() => {
+                  onCategoryChange?.("Technology");
+                  toast({
+                    title: "Category changed",
+                    description: "Showing trending technology news",
+                  });
+                }}
+              >
                 Trending
               </Button>
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+              <Button 
+                variant="ghost" 
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  toast({
+                    title: "Bookmarks",
+                    description: "Bookmarks feature coming soon",
+                  });
+                }}
+              >
                 Bookmarks
               </Button>
             </nav>
@@ -109,9 +142,10 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
               size="sm" 
               className="relative p-2"
               onClick={() => {
-                // Handle notifications
-                console.log("Notifications clicked");
-                // You can add notification panel logic here
+                toast({
+                  title: "Notifications",
+                  description: "You have 3 new notifications",
+                });
               }}
             >
               <Bell className="h-5 w-5" />
@@ -123,9 +157,10 @@ export function Header({ onSearch, onMenuClick }: HeaderProps) {
               size="sm" 
               className="p-2 hidden sm:flex"
               onClick={() => {
-                // Handle settings
-                console.log("Settings clicked");
-                // You can add settings panel logic here
+                toast({
+                  title: "Settings",
+                  description: "Settings panel coming soon",
+                });
               }}
             >
               <Settings className="h-5 w-5" />

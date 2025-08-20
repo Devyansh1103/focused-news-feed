@@ -59,7 +59,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onSearch={handleSearch} />
+      <Header 
+        onSearch={handleSearch} 
+        activeCategory={activeCategory}
+        onCategoryChange={setActiveCategory}
+      />
       
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
         {/* Hero Section */}
