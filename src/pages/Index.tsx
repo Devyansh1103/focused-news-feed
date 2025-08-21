@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/ui/hero-section";
 import { CategoryFilter } from "@/components/ui/category-filter";
 import { NewsCard } from "@/components/ui/news-card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useNews } from "@/hooks/useNews";
 import { useBookmarks } from "@/hooks/useBookmarks";
@@ -80,6 +81,42 @@ const Index = () => {
             description: "Full article view coming soon",
           })}
         />
+
+        {/* Suggested for You */}
+        {user && articles.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-foreground">Suggested for You</h2>
+              <Badge variant="secondary" className="bg-primary/10 text-primary">
+                Personalized
+              </Badge>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {articles.slice(0, 4).map((article) => (
+                <div key={`suggested-${article.id}`} className="bg-card rounded-lg p-4 border hover:shadow-md transition-shadow cursor-pointer">
+                  {article.image_url && (
+                    <div className="h-24 w-full bg-muted rounded-md mb-3 overflow-hidden">
+                      <img 
+                        src={article.image_url} 
+                        alt={article.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <h3 className="font-semibold text-sm mb-2 line-clamp-2 text-foreground">
+                    {article.title}
+                  </h3>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <Badge variant="outline" className="text-xs">
+                      {article.category}
+                    </Badge>
+                    <span>{article.read_time || 5} min read</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Category Filter */}
         <section className="space-y-6">
