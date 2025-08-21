@@ -15,6 +15,7 @@ interface NewsCardProps {
   onBookmark?: () => void;
   onShare?: () => void;
   onRate?: (rating: number) => void;
+  onClick?: () => void;
   className?: string;
 }
 
@@ -29,13 +30,17 @@ export function NewsCard({
   onBookmark,
   onShare,
   onRate,
+  onClick,
   className
 }: NewsCardProps) {
   return (
-    <Card className={cn(
-      "group cursor-pointer bg-gradient-card shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 border-border/50",
-      className
-    )}>
+    <Card 
+      onClick={onClick}
+      className={cn(
+        "group cursor-pointer bg-gradient-card shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 border-border/50",
+        className
+      )}
+    >
       {imageUrl && (
         <div className="relative overflow-hidden rounded-t-lg">
           <img

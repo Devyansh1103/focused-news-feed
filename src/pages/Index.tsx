@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/ui/header";
 import { HeroSection } from "@/components/ui/hero-section";
 import { CategoryFilter } from "@/components/ui/category-filter";
@@ -16,6 +17,7 @@ import { RefreshCw } from "lucide-react";
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("All");
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const { articles, loading, fetchNewsFromAPI } = useNews(activeCategory);
@@ -76,10 +78,7 @@ const Index = () => {
           imageUrl={heroImage}
           onBookmark={() => handleBookmark(featuredArticle.id)}
           onShare={() => handleShare(featuredArticle.title)}
-          onReadMore={() => toast({
-            title: "Opening article",
-            description: "Full article view coming soon",
-          })}
+          onReadMore={() => navigate('/article/featured')}
         />
 
         {/* Suggested for You */}
@@ -93,7 +92,11 @@ const Index = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {articles.slice(0, 4).map((article) => (
-                <div key={`suggested-${article.id}`} className="bg-card rounded-lg p-4 border hover:shadow-md transition-shadow cursor-pointer">
+                <div 
+                  key={`suggested-${article.id}`} 
+                  className="bg-card rounded-lg p-4 border hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/article/${article.id}`)}
+                >
                   {article.image_url && (
                     <div className="h-24 w-full bg-muted rounded-md mb-3 overflow-hidden">
                       <img 
@@ -167,6 +170,7 @@ const Index = () => {
                 onBookmark={() => handleBookmark(article.id)}
                 onShare={() => handleShare(article.title)}
                 onRate={(rating) => handleRate(article.id, rating)}
+                onClick={() => navigate(`/article/${article.id}`)}
               />
             ))
           ) : (
