@@ -6,15 +6,18 @@ import { Search, Bell, Settings, Menu, Sun, Moon, LogOut } from "lucide-react";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { NotificationsPanel } from "@/components/ui/notifications-panel";
+import { SettingsPanel } from "@/components/ui/settings-panel";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
   onMenuClick?: () => void;
   activeCategory?: string;
   onCategoryChange?: (category: string) => void;
+  onFetchTrending?: () => void;
 }
 
-export function Header({ onSearch, onMenuClick, activeCategory, onCategoryChange }: HeaderProps) {
+export function Header({ onSearch, onMenuClick, activeCategory, onCategoryChange, onFetchTrending }: HeaderProps) {
   const [isDark, setIsDark] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { user, signOut } = useAuth();
@@ -82,12 +85,12 @@ export function Header({ onSearch, onMenuClick, activeCategory, onCategoryChange
               </Button>
               <Button 
                 variant="ghost" 
-                className={`text-muted-foreground hover:text-foreground ${activeCategory === "Technology" ? "text-foreground bg-muted" : ""}`}
+                className="text-muted-foreground hover:text-foreground"
                 onClick={() => {
-                  onCategoryChange?.("Technology");
+                  onFetchTrending?.();
                   toast({
-                    title: "Category changed",
-                    description: "Showing trending technology news",
+                    title: "Fetching trending news",
+                    description: "Loading trending articles from all categories",
                   });
                 }}
               >
@@ -137,34 +140,25 @@ export function Header({ onSearch, onMenuClick, activeCategory, onCategoryChange
               )}
             </Button>
             
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="relative p-2"
-              onClick={() => {
-                toast({
-                  title: "Notifications",
-                  description: "You have 3 new notifications",
-                });
-              }}
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-3 w-3 bg-accent rounded-full border-2 border-background"></span>
-            </Button>
+            <NotificationsPanel>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-2"
+              >
+                <Bell className="h-5 w-5" />
+              </Button>
+            </NotificationsPanel>
             
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="p-2 hidden sm:flex"
-              onClick={() => {
-                toast({
-                  title: "Settings",
-                  description: "Settings panel coming soon",
-                });
-              }}
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
+            <SettingsPanel>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-2 hidden sm:flex"
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+            </SettingsPanel>
             
             {user ? (
               <div className="flex items-center gap-2">

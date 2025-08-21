@@ -17,10 +17,11 @@ import { RefreshCw } from "lucide-react";
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { articles, loading, fetchNewsFromAPI } = useNews(activeCategory);
+  const { articles, loading, fetchNewsFromAPI, fetchTrendingNews } = useNews(activeCategory, searchQuery);
   const { bookmarkedArticles, toggleBookmark } = useBookmarks();
   const { articleRatings, rateArticle } = useRatings();
 
@@ -50,10 +51,13 @@ const Index = () => {
   };
 
   const handleSearch = (query: string) => {
-    toast({
-      title: "Search functionality",
-      description: `Searching for: "${query}"`,
-    });
+    setSearchQuery(query);
+    if (query.trim()) {
+      toast({
+        title: "Searching",
+        description: `Searching for: "${query}"`,
+      });
+    }
   };
 
   const handleFetchNews = async () => {
@@ -66,6 +70,7 @@ const Index = () => {
         onSearch={handleSearch} 
         activeCategory={activeCategory}
         onCategoryChange={setActiveCategory}
+        onFetchTrending={fetchTrendingNews}
       />
       
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">

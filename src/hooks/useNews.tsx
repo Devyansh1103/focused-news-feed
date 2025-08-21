@@ -17,7 +17,7 @@ export interface Article {
   created_at: string
 }
 
-export const useNews = (category: string = 'All') => {
+export const useNews = (category: string = 'All', searchQuery: string = '') => {
   const [articles, setArticles] = useState<Article[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -36,6 +36,10 @@ export const useNews = (category: string = 'All') => {
 
       if (category !== 'All') {
         query = query.eq('category', category.toLowerCase())
+      }
+
+      if (searchQuery.trim()) {
+        query = query.or(`title.ilike.%${searchQuery}%,summary.ilike.%${searchQuery}%,content.ilike.%${searchQuery}%`)
       }
 
       const { data, error } = await query
@@ -79,9 +83,35 @@ export const useNews = (category: string = 'All') => {
     }
   }
 
+  const fetchTrendingNews = async () => {
+    try {
+      const categories = ['general', 'business', 'technology', 'sports', 'entertainment'];
+      const promises = categories.map(cat => 
+        supabase.functions.invoke('fetch-news', {
+          body: { category: cat }
+        })
+      );
+      
+      await Promise.all(promises);
+      
+      toast({
+        title: "Trending news updated",
+        description: "Fetched trending articles from all categories",
+      })
+
+      await fetchArticles()
+    } catch (err: any) {
+      toast({
+        title: "Error fetching trending news",
+        description: err.message,
+        variant: "destructive",
+      })
+    }
+  }
+
   useEffect(() => {
     fetchArticles()
-  }, [category])
+  }, [category, searchQuery])
 
   return {
     articles,
@@ -89,5 +119,6 @@ export const useNews = (category: string = 'All') => {
     error,
     refetch: fetchArticles,
     fetchNewsFromAPI,
+    fetchTrendingNews,
   }
 }
