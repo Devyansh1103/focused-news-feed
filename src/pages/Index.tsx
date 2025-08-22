@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/ui/header";
-import { HeroSection } from "@/components/ui/hero-section";
+import { HeroCarousel } from "@/components/ui/hero-carousel";
 import { CategoryFilter } from "@/components/ui/category-filter";
 import { NewsCard } from "@/components/ui/news-card";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,8 @@ import { useNews } from "@/hooks/useNews";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useRatings } from "@/hooks/useRatings";
 import { useAuth } from "@/hooks/useAuth";
-import { featuredArticle, categories } from "@/data/sampleNews";
-import heroImage from "@/assets/hero-news.jpg";
+import { useUserBehavior } from "@/hooks/useUserBehavior";
+import { newsArticles, categories } from "@/data/sampleNews";
 import { RefreshCw } from "lucide-react";
 
 const Index = () => {
@@ -24,6 +24,7 @@ const Index = () => {
   const { articles, loading, fetchNewsFromAPI, fetchTrendingNews, searchNews } = useNews(activeCategory, searchQuery);
   const { bookmarkedArticles, toggleBookmark } = useBookmarks();
   const { articleRatings, rateArticle } = useRatings();
+  const { trackSearch, trackCategoryView, trackArticleClick } = useUserBehavior();
 
 
   const handleBookmark = (articleId: string) => {
@@ -53,6 +54,7 @@ const Index = () => {
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
     if (query.trim()) {
+      trackSearch(query);
       await searchNews(query);
     }
   };
@@ -71,16 +73,25 @@ const Index = () => {
       />
       
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-        {/* Hero Section */}
-        <HeroSection
-          title={featuredArticle.title}
-          summary={featuredArticle.summary}
-          category={featuredArticle.category}
-          readTime={featuredArticle.readTime}
-          imageUrl={heroImage}
-          onBookmark={() => handleBookmark(featuredArticle.id)}
-          onShare={() => handleShare(featuredArticle.title)}
-          onReadMore={() => navigate('/article/featured')}
+        {/* Hero Carousel */}
+        <HeroCarousel
+          articles={newsArticles.slice(0, 5).map(article => ({
+            id: article.id,
+            title: article.title,
+            summary: article.summary,
+            category: article.category,
+            readTime: article.readTime,
+            imageUrl: article.imageUrl || '/src/assets/hero-news.jpg'
+          }))}
+          onBookmark={(articleId) => {
+            handleBookmark(articleId);
+            trackArticleClick(articleId);
+          }}
+          onShare={(title) => handleShare(title)}
+          onReadMore={(articleId) => {
+            trackArticleClick(articleId);
+            navigate(`/article/${articleId}`);
+          }}
         />
 
         {/* Suggested for You */}
@@ -143,7 +154,10 @@ const Index = () => {
           <CategoryFilter
             categories={categories}
             activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
+            onCategoryChange={(category) => {
+              setActiveCategory(category);
+              trackCategoryView(category);
+            }}
           />
         </section>
 
@@ -172,7 +186,10 @@ const Index = () => {
                 onBookmark={() => handleBookmark(article.id)}
                 onShare={() => handleShare(article.title)}
                 onRate={(rating) => handleRate(article.id, rating)}
-                onClick={() => navigate(`/article/${article.id}`)}
+                onClick={() => {
+                  trackArticleClick(article.id);
+                  navigate(`/article/${article.id}`);
+                }}
               />
             ))
           ) : (

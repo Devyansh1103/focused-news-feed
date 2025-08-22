@@ -1,73 +1,43 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Bell, X, Check, Star, MessageCircle, TrendingUp } from "lucide-react";
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'news' | 'trending' | 'bookmark' | 'system';
-  timestamp: Date;
-  read: boolean;
-}
+import React from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { Bell, Check, X, Clock, Search, TrendingUp } from 'lucide-react';
+import { useUserBehavior } from '@/hooks/useUserBehavior';
+import { useNavigate } from 'react-router-dom';
 
 interface NotificationsPanelProps {
   children: React.ReactNode;
 }
 
 export function NotificationsPanel({ children }: NotificationsPanelProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      title: 'Breaking News',
-      message: 'New article available in Technology category',
-      type: 'news',
-      timestamp: new Date(Date.now() - 30 * 60000), // 30 minutes ago
-      read: false,
-    },
-    {
-      id: '2',
-      title: 'Trending Topic',
-      message: 'Football news is trending - 15 new articles',
-      type: 'trending',
-      timestamp: new Date(Date.now() - 60 * 60000), // 1 hour ago
-      read: false,
-    },
-    {
-      id: '3',
-      title: 'Article Saved',
-      message: 'Your bookmarked article was updated',
-      type: 'bookmark',
-      timestamp: new Date(Date.now() - 2 * 60 * 60000), // 2 hours ago
-      read: true,
-    },
-  ]);
+  const navigate = useNavigate();
+  const { 
+    notifications, 
+    unreadCount, 
+    markNotificationAsRead, 
+    deleteNotification, 
+    markAllNotificationsAsRead 
+  } = useUserBehavior();
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+  const handleNotificationClick = (notification: any) => {
+    markNotificationAsRead(notification.id);
+    if (notification.articleId) {
+      navigate(`/article/${notification.articleId}`);
+    }
   };
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'news': return <Star className="h-4 w-4 text-blue-500" />;
-      case 'trending': return <TrendingUp className="h-4 w-4 text-orange-500" />;
-      case 'bookmark': return <MessageCircle className="h-4 w-4 text-green-500" />;
-      default: return <Bell className="h-4 w-4 text-gray-500" />;
+      case 'search':
+        return <Search className="h-4 w-4 text-blue-500" />;
+      case 'category':
+        return <TrendingUp className="h-4 w-4 text-green-500" />;
+      case 'trending':
+        return <Bell className="h-4 w-4 text-orange-500" />;
+      default:
+        return <Bell className="h-4 w-4" />;
     }
   };
 
@@ -97,70 +67,79 @@ export function NotificationsPanel({ children }: NotificationsPanelProps) {
           )}
         </div>
       </PopoverTrigger>
+      
       <PopoverContent className="w-96 p-0" align="end">
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-lg">Notifications</h3>
             {unreadCount > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={markAllAsRead}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllNotificationsAsRead}
                 className="text-xs"
               >
                 Mark all as read
               </Button>
             )}
           </div>
+          {unreadCount > 0 && (
+            <p className="text-sm text-muted-foreground mt-1">
+              You have {unreadCount} new notification{unreadCount === 1 ? '' : 's'}
+            </p>
+          )}
         </div>
+        
         <div className="max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
-              <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <div className="p-6 text-center text-muted-foreground">
+              <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>No notifications yet</p>
             </div>
           ) : (
             notifications.map((notification) => (
-              <Card key={notification.id} className={`m-2 p-3 border transition-colors ${
-                notification.read ? 'bg-muted/30' : 'bg-background border-primary/20'
-              }`}>
+              <Card 
+                key={notification.id}
+                className={`m-2 p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
+                  !notification.read ? 'bg-primary/5 border-primary/20' : ''
+                }`}
+                onClick={() => handleNotificationClick(notification)}
+              >
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
                     {getIcon(notification.type)}
                   </div>
+                  
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between gap-2">
                       <h4 className={`font-medium text-sm ${
-                        notification.read ? 'text-muted-foreground' : 'text-foreground'
+                        !notification.read ? 'text-foreground' : 'text-muted-foreground'
                       }`}>
                         {notification.title}
                       </h4>
-                      <div className="flex items-center gap-1 ml-2">
+                      
+                      <div className="flex items-center gap-1">
                         {!notification.read && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => markAsRead(notification.id)}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Check className="h-3 w-3" />
-                          </Button>
+                          <div className="w-2 h-2 bg-primary rounded-full" />
                         )}
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => deleteNotification(notification.id)}
-                          className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteNotification(notification.id);
+                          }}
+                          className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
                         >
                           <X className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
-                    <p className={`text-xs mt-1 ${
-                      notification.read ? 'text-muted-foreground' : 'text-foreground'
-                    }`}>
+                    
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                       {notification.message}
                     </p>
+                    
                     <p className="text-xs text-muted-foreground mt-2">
                       {formatTime(notification.timestamp)}
                     </p>

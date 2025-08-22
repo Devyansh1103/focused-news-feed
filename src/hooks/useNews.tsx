@@ -97,19 +97,36 @@ export const useNews = (category: string = 'All', searchQuery: string = '') => {
 
       if (error) throw error
 
+      // After fetching new articles, get them from database with search filter
+      let searchQuery = supabase
+        .from('articles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      if (query.trim()) {
+        searchQuery = searchQuery.or(`title.ilike.%${query}%,summary.ilike.%${query}%,content.ilike.%${query}%`)
+      }
+
+      const { data: searchResults, error: searchError } = await searchQuery
+
+      if (searchError) throw searchError
+
+      setArticles(searchResults || [])
+      
       toast({
         title: "Search completed",
-        description: `Found ${data.processed} articles for "${query}"`,
+        description: `Found ${searchResults?.length || 0} articles for "${query}"`,
       })
 
-      // Refresh the articles list to show search results
-      await fetchArticles()
     } catch (err: any) {
       toast({
         title: "Error searching news",
         description: err.message,
         variant: "destructive",
       })
+    } finally {
+      setLoading(false)
     }
   }
 
