@@ -21,7 +21,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { articles, loading, fetchNewsFromAPI, fetchTrendingNews } = useNews(activeCategory, searchQuery);
+  const { articles, loading, fetchNewsFromAPI, fetchTrendingNews, searchNews } = useNews(activeCategory, searchQuery);
   const { bookmarkedArticles, toggleBookmark } = useBookmarks();
   const { articleRatings, rateArticle } = useRatings();
 
@@ -50,13 +50,10 @@ const Index = () => {
     rateArticle(articleId, rating);
   };
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query);
     if (query.trim()) {
-      toast({
-        title: "Searching",
-        description: `Searching for: "${query}"`,
-      });
+      await searchNews(query);
     }
   };
 

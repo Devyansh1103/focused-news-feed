@@ -30,14 +30,21 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { category = 'general' } = await req.json().catch(() => ({}));
+    const { category = 'general', query } = await req.json().catch(() => ({}));
     
-    console.log(`Fetching news for category: ${category}`);
+    console.log(`Fetching news for category: ${category}${query ? `, query: ${query}` : ''}`);
+
+    let newsUrl;
+    if (query && query.trim()) {
+      // Use everything endpoint for search queries
+      newsUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query.trim())}&apiKey=${newsApiKey}&pageSize=20&sortBy=relevancy&language=en`;
+    } else {
+      // Use top-headlines for category-based requests
+      newsUrl = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${newsApiKey}&pageSize=20`;
+    }
 
     // Fetch news from NewsAPI
-    const newsResponse = await fetch(
-      `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${newsApiKey}&pageSize=20`
-    );
+    const newsResponse = await fetch(newsUrl);
 
     if (!newsResponse.ok) {
       const errorText = await newsResponse.text();
@@ -63,7 +70,7 @@ serve(async (req) => {
         title: article.title,
         summary: article.description,
         content: article.content,
-        category: category,
+        category: query ? 'search' : category,
         source: article.source?.name,
         author: article.author,
         url: article.url,
@@ -108,7 +115,8 @@ serve(async (req) => {
       message: 'News fetched and stored successfully',
       processed: articles.length,
       inserted: insertedCount,
-      category: category
+      category: query ? 'search' : category,
+      query: query || null
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

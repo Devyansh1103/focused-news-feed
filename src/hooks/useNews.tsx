@@ -83,6 +83,36 @@ export const useNews = (category: string = 'All', searchQuery: string = '') => {
     }
   }
 
+  const searchNews = async (query: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data, error } = await supabase.functions.invoke('fetch-news', {
+        body: { 
+          category: 'general',
+          query: query.trim()
+        }
+      })
+
+      if (error) throw error
+
+      toast({
+        title: "Search completed",
+        description: `Found ${data.processed} articles for "${query}"`,
+      })
+
+      // Refresh the articles list to show search results
+      await fetchArticles()
+    } catch (err: any) {
+      toast({
+        title: "Error searching news",
+        description: err.message,
+        variant: "destructive",
+      })
+    }
+  }
+
   const fetchTrendingNews = async () => {
     try {
       const categories = ['general', 'business', 'technology', 'sports', 'entertainment'];
@@ -120,5 +150,6 @@ export const useNews = (category: string = 'All', searchQuery: string = '') => {
     refetch: fetchArticles,
     fetchNewsFromAPI,
     fetchTrendingNews,
+    searchNews,
   }
 }

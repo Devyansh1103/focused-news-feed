@@ -15,7 +15,7 @@ const ArticleDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { articles } = useNews();
+  const { articles, loading } = useNews();
   const { bookmarkedArticles, toggleBookmark } = useBookmarks();
   const { articleRatings, rateArticle } = useRatings();
   
@@ -34,10 +34,11 @@ const ArticleDetail = () => {
     const foundArticle = articles.find(a => a.id === id);
     if (foundArticle) {
       setArticle(foundArticle);
-    } else {
+    } else if (!loading && articles.length > 0) {
+      // Only navigate to 404 if we're done loading and still no article found
       navigate('/404');
     }
-  }, [id, articles, navigate]);
+  }, [id, articles, loading, navigate]);
 
   const handleBookmark = () => {
     if (article) {
