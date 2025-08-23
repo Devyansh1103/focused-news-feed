@@ -68,15 +68,15 @@ serve(async (req) => {
       )
       .map((article: any) => ({
         title: article.title,
-        summary: article.description,
-        content: article.content,
+        summary: article.description || article.content?.substring(0, 500) + '...' || 'No summary available for this article',
+        content: article.content || article.description || 'Full content not available',
         category: query ? 'search' : category,
         source: article.source?.name,
         author: article.author,
         url: article.url,
         image_url: article.urlToImage,
         published_at: article.publishedAt,
-        read_time: Math.ceil((article.content?.length || 0) / 200), // Rough estimate: 200 words per minute
+        read_time: Math.ceil((article.content?.length || article.description?.length || 1000) / 200), // Rough estimate: 200 words per minute
       })) || [];
 
     console.log(`Processing ${articles.length} valid articles`);
