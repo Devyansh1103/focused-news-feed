@@ -88,35 +88,43 @@ export const useNews = (category: string = 'All', searchQuery: string = '') => {
       setLoading(true)
       setError(null)
 
-      const { data, error } = await supabase.functions.invoke('fetch-news', {
-        body: { 
-          category: 'general',
-          query: query.trim()
-        }
-      })
-
-      if (error) throw error
-
-      // After fetching new articles, get them from database with search filter
+      // First search existing articles
       let searchQuery = supabase
         .from('articles')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(20)
+        .limit(50)
 
       if (query.trim()) {
         searchQuery = searchQuery.or(`title.ilike.%${query}%,summary.ilike.%${query}%,content.ilike.%${query}%`)
       }
 
-      const { data: searchResults, error: searchError } = await searchQuery
-
+      const { data: existingResults, error: searchError } = await searchQuery
       if (searchError) throw searchError
 
-      setArticles(searchResults || [])
+      // If we have fewer than 2 results, fetch from API
+      if (!existingResults || existingResults.length < 2) {
+        const { data, error } = await supabase.functions.invoke('fetch-news', {
+          body: { 
+            category: 'general',
+            query: query.trim()
+          }
+        })
+
+        if (error) throw error
+
+        // Search again after fetching
+        const { data: newResults, error: newSearchError } = await searchQuery
+        if (newSearchError) throw newSearchError
+        setArticles(newResults || [])
+      } else {
+        setArticles(existingResults)
+      }
       
+      const resultCount = existingResults?.length || 0
       toast({
         title: "Search completed",
-        description: `Found ${searchResults?.length || 0} articles for "${query}"`,
+        description: `Found ${resultCount} articles for "${query}"`,
       })
 
     } catch (err: any) {

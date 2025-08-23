@@ -48,14 +48,15 @@ const ArticleDetail = () => {
 
   const handleShare = () => {
     if (article) {
+      const articleUrl = `${window.location.origin}/article/${article.id}`;
       if (navigator.share) {
         navigator.share({
           title: article.title,
           text: article.summary || '',
-          url: window.location.href,
+          url: articleUrl,
         });
       } else {
-        navigator.clipboard.writeText(window.location.href);
+        navigator.clipboard.writeText(articleUrl);
         toast({
           title: "Link copied",
           description: "Article link copied to clipboard",

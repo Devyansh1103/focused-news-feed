@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Bookmark, Share2, ChevronLeft, ChevronRight } from "lucide-react";
@@ -30,16 +30,23 @@ export function HeroCarousel({
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
 
-  const handleSelect = () => {
+  useEffect(() => {
     if (!api) return;
-    setCurrent(api.selectedScrollSnap());
-  };
+
+    const handleSelect = () => {
+      setCurrent(api.selectedScrollSnap());
+    };
+
+    api.on("select", handleSelect);
+    return () => {
+      api.off("select", handleSelect);
+    };
+  }, [api]);
 
   return (
     <section className="relative">
       <Carousel
         setApi={setApi}
-        onSelect={handleSelect}
         className="w-full"
         opts={{
           align: "start",
