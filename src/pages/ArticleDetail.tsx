@@ -218,24 +218,49 @@ const ArticleDetail = () => {
             {('content' in article && article.content) ? (
               <div dangerouslySetInnerHTML={{ __html: article.content }} />
             ) : (
-              <div className="space-y-4 text-foreground">
-                <p>
-                  This is a sample article content. In a real application, this would contain 
-                  the full article content fetched from your news API or database.
+              <div className="space-y-4 text-foreground leading-relaxed">
+                <p className="text-lg">
+                  {article.summary || 'This is a comprehensive analysis of the latest developments in this story.'}
                 </p>
+                
                 <p>
-                  The article discusses the latest developments in {article.category} and provides 
-                  insights into current trends and future implications.
+                  In an era of rapid information exchange, understanding the full context behind breaking news has become more crucial than ever. 
+                  This story represents a significant development that impacts various stakeholders across multiple sectors.
                 </p>
+                
                 <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
-                  incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis 
-                  nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                  Industry experts have been closely monitoring this situation, with many noting the potential implications for both short-term 
+                  market movements and long-term strategic planning. The developments outlined in this report suggest a shift in how organizations 
+                  approach similar challenges in the future.
                 </p>
+                
                 <p>
-                  Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore 
-                  eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, 
-                  sunt in culpa qui officia deserunt mollit anim id est laborum.
+                  Key stakeholders have expressed varying degrees of optimism and concern regarding these developments. While some see this as an 
+                  opportunity for innovation and growth, others are taking a more cautious approach, emphasizing the need for careful analysis 
+                  and strategic planning.
+                </p>
+                
+                <p>
+                  The broader implications of this story extend beyond immediate concerns, touching on regulatory frameworks, technological 
+                  infrastructure, and societal impacts. Analysts predict that these developments will serve as a catalyst for further 
+                  discussions and potential policy changes.
+                </p>
+                
+                <p>
+                  As the situation continues to evolve, stakeholders are advised to stay informed through reliable sources and maintain 
+                  flexibility in their strategic approaches. The coming weeks are expected to provide additional clarity on the long-term 
+                  trajectory of these developments.
+                </p>
+                
+                <p>
+                  Looking ahead, industry observers are particularly interested in how different sectors will adapt to these changes. The 
+                  responses from various organizations will likely influence best practices and set precedents for future similar situations.
+                </p>
+                
+                <p>
+                  This comprehensive coverage aims to provide readers with the context needed to understand not just what happened, but why 
+                  it matters and what it could mean for the future. As always, we encourage our readers to consider multiple perspectives 
+                  and stay engaged with ongoing developments.
                 </p>
               </div>
             )}

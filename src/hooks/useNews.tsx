@@ -140,7 +140,7 @@ export const useNews = (category: string = 'All', searchQuery: string = '') => {
 
   const fetchTrendingNews = async () => {
     try {
-      const categories = ['general', 'business', 'technology', 'sports', 'entertainment'];
+      const categories = ['general', 'business', 'technology', 'sports', 'entertainment', 'health', 'science'];
       const promises = categories.map(cat => 
         supabase.functions.invoke('fetch-news', {
           body: { category: cat }

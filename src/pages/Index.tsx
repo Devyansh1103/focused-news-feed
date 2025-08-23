@@ -31,15 +31,16 @@ const Index = () => {
     toggleBookmark(articleId);
   };
 
-  const handleShare = (title: string) => {
+  const handleShare = (title: string, articleId?: string) => {
+    const articleUrl = articleId ? `${window.location.origin}/article/${articleId}` : window.location.href;
     if (navigator.share) {
       navigator.share({
         title: title,
         text: "Check out this news article from NewsSphere",
-        url: window.location.href,
+        url: articleUrl,
       });
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(articleUrl);
       toast({
         title: "Link copied",
         description: "Article link copied to clipboard",
@@ -56,6 +57,9 @@ const Index = () => {
     if (query.trim()) {
       trackSearch(query);
       await searchNews(query);
+    } else {
+      // Clear search results and show all articles
+      setActiveCategory("All");
     }
   };
 
@@ -87,7 +91,7 @@ const Index = () => {
             handleBookmark(articleId);
             trackArticleClick(articleId);
           }}
-          onShare={(title) => handleShare(title)}
+          onShare={(title) => handleShare(title, "featured")}
           onReadMore={(articleId) => {
             trackArticleClick(articleId);
             navigate(`/article/${articleId}`);
@@ -184,7 +188,7 @@ const Index = () => {
                 isBookmarked={bookmarkedArticles.has(article.id)}
                 rating={articleRatings[article.id] || 0}
                 onBookmark={() => handleBookmark(article.id)}
-                onShare={() => handleShare(article.title)}
+                onShare={() => handleShare(article.title, article.id)}
                 onRate={(rating) => handleRate(article.id, rating)}
                 onClick={() => {
                   trackArticleClick(article.id);
