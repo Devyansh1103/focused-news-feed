@@ -42,9 +42,14 @@ NewsSphere/
 │── /styles
 │── /scripts
 │── README.md
+
+---
+
 ## 🌍 Deployment
 
 -**Deployed on Netlify:**
 --https://focused-news-feed.netlify.app/
+
+---
 
 ## ⭐ If you find NewsSphere useful, consider giving it a star on GitHub!
